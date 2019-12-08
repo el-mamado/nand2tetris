@@ -16,5 +16,24 @@ CHIP Mux4Way16 {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    /**
+    * for better readability, I will call sel[0] "x" and 
+    * sel[1] "y"
+    */
+
+    /* the follwing two AND  gates are just for renaming purpose.*/
+    And(a=sel[0], b=sel[0], out=x);
+    And(a=sel[1], b=sel[1], out=y);
+
+    Not(in=x, out=NOTx);
+    Not(in=y, out=NOTy);
+    
+    /* The follwing AND gates outputs will be the sel of the internal Mux16 gates*/  
+    And(a=x, b=y, out=xANDy);
+    And(a=x, b=NOTy, out=NOTyANDx);
+    And(a=NOTx, b=y, out=NOTxANDy);
+
+    Mux16(a=a, b=b, sel=NOTyANDx, out=TEMP1);
+    Mux16(a=TEMP1, b=c, sel=NOTxANDy, out= TEMP2);
+    Mux16(a=TEMP2, b=d, sel=xANDy, out=out);  
 }
