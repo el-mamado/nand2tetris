@@ -42,5 +42,40 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-   // Put you code here:
+    
+    /* the output of the following gate is always zero.*/
+    And16(a[0..15]=false, b[0..15]=false, out=Zeros);
+
+    /*Applying the zero flag*/
+    Mux16(a=x, b=Zeros, sel=zx, out=TempX);
+    Mux16(a=y, b=Zeros, sel=zy, out=TempY);
+
+    Not16(in=TempX, out=NotTempX);
+    Not16(in=TempY, out=NotTempY);
+    /*Applying negation flag on the inputs*/
+    Mux16(a=TempX, b=NotTempX, sel=nx, out=InternalX);
+    Mux16(a=TempY, b=NotTempY, sel=ny, out=InternalY);
+
+    Add16(a=InternalX, b=InternalY, out=TempXplusY);
+    And16(a=InternalX, b=InternalY, out=TempXandY);
+
+    Mux16(a=TempXandY, b=TempXplusY, sel=f, out=TempOut);
+
+    Not16(in=TempOut, out=NotTempOut);
+
+    /*Applying negation flag on the output
+    * Output is the same as out. The reason why we have an
+    * intermediate bus is that we cannot connect the gates 
+    * output pin to an internal gate
+    */
+    Mux16(a=TempOut, b=NotTempOut, sel=no, out=out,
+   	 out[0..7]=OutputLeastSignificant8,
+	 out[8..15]=OutputMostSignificant8,
+	 out[15]=ng);
+
+    /*The output is zero when all its significant bits are zeros*/
+    Or8Way(in=OutputLeastSignificant8, out=LeastSignificantNotZr);
+    Or8Way(in=OutputMostSignificant8, out=MostSignificantNotZr);
+    Or(a=LeastSignificantNotZr, b=MostSignificantNotZr, out=NotZr);
+    Not(in=NotZr, out=zr);
 }
